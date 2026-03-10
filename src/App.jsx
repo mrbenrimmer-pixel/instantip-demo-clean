@@ -11,6 +11,10 @@ const places = [
     worthComing: { yes: 3, no: 1 },
     vibe: "Chill sunset crowd",
     lastUpdate: "3 minutes ago",
+    responderPrompt: {
+      askedAgo: "30 seconds ago",
+      question: "How crowded is it right now?",
+    },
     suggestedQuestions: [
       "How crowded is it?",
       "Is it worth coming now?",
@@ -68,6 +72,10 @@ const places = [
     worthComing: { yes: 4, no: 2 },
     vibe: "Loud, dressy, high-energy",
     lastUpdate: "5 minutes ago",
+    responderPrompt: {
+      askedAgo: "1 minute ago",
+      question: "Is there a line to get in?",
+    },
     suggestedQuestions: [
       "Is there a line?",
       "What's the vibe tonight?",
@@ -111,6 +119,10 @@ const places = [
     worthComing: { yes: 2, no: 1 },
     vibe: "Sunny, easy, touristy",
     lastUpdate: "7 minutes ago",
+    responderPrompt: {
+      askedAgo: "45 seconds ago",
+      question: "How's the water today?",
+    },
     suggestedQuestions: [
       "How crowded is it?",
       "How's the water today?",
@@ -152,6 +164,10 @@ const places = [
     worthComing: { yes: 3, no: 2 },
     vibe: "Loud, colorful, packed",
     lastUpdate: "4 minutes ago",
+    responderPrompt: {
+      askedAgo: "20 seconds ago",
+      question: "Are most stalls open right now?",
+    },
     suggestedQuestions: [
       "How crowded is it?",
       "Is it worth coming now?",
@@ -243,7 +259,15 @@ function SplashScreen({ fadeOut }) {
   );
 }
 
-function SearchScreen({ query, setQuery, onSelectPlace }) {
+function SearchScreen({
+  query,
+  setQuery,
+  onSelectPlace,
+  currentPlace,
+  responderQuickChoice,
+  setResponderQuickChoice,
+  onOpenResponder,
+}) {
   const filteredPlaces = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return places;
@@ -267,6 +291,48 @@ function SearchScreen({ query, setQuery, onSelectPlace }) {
           />
         </div>
       </div>
+
+      {currentPlace && (
+        <div style={styles.hereNowCard}>
+          <div style={styles.hereNowTopLine}>You seem to be at {currentPlace.name}</div>
+          <div style={styles.hereNowTitle}>
+            Someone is deciding whether to come here.
+          </div>
+          <div style={styles.hereNowSub}>
+            {currentPlace.responderPrompt.question}
+          </div>
+          <div style={styles.hereNowMeta}>
+            Asked {currentPlace.responderPrompt.askedAgo}
+          </div>
+
+          <div style={styles.quickOptions}>
+            {["Empty", "Moderate", "Busy"].map((option) => (
+              <button
+                key={option}
+                onClick={() => setResponderQuickChoice(option)}
+                style={{
+                  ...styles.quickOption,
+                  ...(responderQuickChoice === option
+                    ? styles.quickOptionActive
+                    : {}),
+                }}
+              >
+                {option}
+              </button>
+            ))}
+          </div>
+
+          {responderQuickChoice && (
+            <div style={styles.quickAnswerResult}>
+              You answered: <strong>{responderQuickChoice}</strong>
+            </div>
+          )}
+
+          <button style={styles.primaryButton} onClick={onOpenResponder}>
+            Can you help more?
+          </button>
+        </div>
+      )}
 
       <div style={styles.section}>
         <div style={styles.sectionTitle}>Trending now</div>
@@ -433,11 +499,135 @@ function PlaceScreen({ place, onBack }) {
   );
 }
 
+function ResponderScreen({
+  place,
+  onBack,
+  responderQuickChoice,
+  setResponderQuickChoice,
+}) {
+  const [worthAnswer, setWorthAnswer] = useState(null);
+  const [vibeAnswer, setVibeAnswer] = useState(null);
+
+  return (
+    <div style={styles.screen}>
+      <div style={styles.topBar}>
+        <button onClick={onBack} style={styles.backButton}>
+          ← Back
+        </button>
+      </div>
+
+      <div style={styles.responderHero}>
+        <div style={styles.placeHeaderKicker}>You&apos;re here now</div>
+        <h1 style={styles.placeHeaderTitle}>{place.name}</h1>
+        <div style={styles.placeHeaderArea}>{place.area}</div>
+
+        <div style={styles.responderHeadline}>
+          Help travelers decide in real time
+        </div>
+        <div style={styles.responderSub}>
+          Someone is deciding whether to come here. What should they know?
+        </div>
+      </div>
+
+      <div style={styles.section}>
+        <div style={styles.sectionTitle}>How crowded is it?</div>
+        <div style={styles.quickQuestionCard}>
+          <div style={styles.quickOptions}>
+            {["Empty", "Moderate", "Busy"].map((option) => (
+              <button
+                key={option}
+                onClick={() => setResponderQuickChoice(option)}
+                style={{
+                  ...styles.quickOption,
+                  ...(responderQuickChoice === option
+                    ? styles.quickOptionActive
+                    : {}),
+                }}
+              >
+                {option}
+              </button>
+            ))}
+          </div>
+          {responderQuickChoice && (
+            <div style={styles.quickAnswerResult}>
+              Crowd answer: <strong>{responderQuickChoice}</strong>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div style={styles.section}>
+        <div style={styles.sectionTitle}>Worth coming now?</div>
+        <div style={styles.quickQuestionCard}>
+          <div style={styles.quickOptions}>
+            {["Yes", "Maybe", "No"].map((option) => (
+              <button
+                key={option}
+                onClick={() => setWorthAnswer(option)}
+                style={{
+                  ...styles.quickOption,
+                  ...(worthAnswer === option ? styles.quickOptionActive : {}),
+                }}
+              >
+                {option}
+              </button>
+            ))}
+          </div>
+          {worthAnswer && (
+            <div style={styles.quickAnswerResult}>
+              Worth coming: <strong>{worthAnswer}</strong>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div style={styles.section}>
+        <div style={styles.sectionTitle}>What&apos;s the vibe?</div>
+        <div style={styles.quickQuestionCard}>
+          <div style={styles.quickOptions}>
+            {["Chill", "Lively", "Packed"].map((option) => (
+              <button
+                key={option}
+                onClick={() => setVibeAnswer(option)}
+                style={{
+                  ...styles.quickOption,
+                  ...(vibeAnswer === option ? styles.quickOptionActive : {}),
+                }}
+              >
+                {option}
+              </button>
+            ))}
+          </div>
+          {vibeAnswer && (
+            <div style={styles.quickAnswerResult}>
+              Vibe: <strong>{vibeAnswer}</strong>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div style={styles.section}>
+        <div style={styles.sectionTitle}>Open question right now</div>
+        <div style={styles.questionCard}>
+          <div style={styles.questionMeta}>
+            Asked {place.responderPrompt.askedAgo}
+          </div>
+          <div style={styles.questionText}>{place.responderPrompt.question}</div>
+          <button style={styles.primaryButton}>Go available for chat</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
   const [fadeSplash, setFadeSplash] = useState(false);
   const [query, setQuery] = useState("");
   const [selectedPlace, setSelectedPlace] = useState(null);
+  const [mode, setMode] = useState("search");
+  const [currentPlace] = useState(places[0]);
+  const [responderQuickChoice, setResponderQuickChoice] = useState(null);
 
   useEffect(() => {
     const fadeTimer = setTimeout(() => {
@@ -458,6 +648,17 @@ export default function App() {
     return <SplashScreen fadeOut={fadeSplash} />;
   }
 
+  if (mode === "responder") {
+    return (
+      <ResponderScreen
+        place={currentPlace}
+        onBack={() => setMode("search")}
+        responderQuickChoice={responderQuickChoice}
+        setResponderQuickChoice={setResponderQuickChoice}
+      />
+    );
+  }
+
   if (selectedPlace) {
     return (
       <PlaceScreen
@@ -472,6 +673,10 @@ export default function App() {
       query={query}
       setQuery={setQuery}
       onSelectPlace={(place) => setSelectedPlace(place)}
+      currentPlace={currentPlace}
+      responderQuickChoice={responderQuickChoice}
+      setResponderQuickChoice={setResponderQuickChoice}
+      onOpenResponder={() => setMode("responder")}
     />
   );
 }
@@ -551,6 +756,37 @@ const styles = {
     fontSize: "16px",
     outline: "none",
     background: "#ffffff",
+  },
+  hereNowCard: {
+    background: "linear-gradient(180deg, #eff6ff 0%, #ffffff 100%)",
+    border: "1px solid #bfdbfe",
+    borderRadius: "22px",
+    padding: "18px",
+    boxShadow: "0 6px 18px rgba(15, 23, 42, 0.05)",
+    marginBottom: "22px",
+  },
+  hereNowTopLine: {
+    fontSize: "13px",
+    fontWeight: 800,
+    color: "#2563eb",
+    marginBottom: "10px",
+  },
+  hereNowTitle: {
+    fontSize: "22px",
+    lineHeight: 1.2,
+    fontWeight: 800,
+    marginBottom: "10px",
+  },
+  hereNowSub: {
+    fontSize: "15px",
+    lineHeight: 1.45,
+    color: "#334155",
+    marginBottom: "8px",
+  },
+  hereNowMeta: {
+    fontSize: "13px",
+    color: "#64748b",
+    marginBottom: "14px",
   },
   section: {
     marginTop: "22px",
@@ -713,6 +949,7 @@ const styles = {
     background: "#2563eb",
     color: "#ffffff",
     cursor: "pointer",
+    marginTop: "14px",
   },
   suggestedWrap: {
     display: "flex",
@@ -830,5 +1067,23 @@ const styles = {
     fontSize: "15px",
     lineHeight: 1.45,
     fontWeight: 700,
+  },
+  responderHero: {
+    background: "linear-gradient(180deg, #eff6ff 0%, #ffffff 100%)",
+    border: "1px solid #bfdbfe",
+    borderRadius: "22px",
+    padding: "18px",
+    boxShadow: "0 6px 18px rgba(15, 23, 42, 0.05)",
+  },
+  responderHeadline: {
+    fontSize: "22px",
+    lineHeight: 1.2,
+    fontWeight: 800,
+    marginBottom: "10px",
+  },
+  responderSub: {
+    fontSize: "15px",
+    lineHeight: 1.45,
+    color: "#334155",
   },
 };
