@@ -1,7 +1,766 @@
-export default function App() {
+import { useEffect, useMemo, useState } from "react";
+
+const places = [
+  {
+    id: "banana-beach",
+    name: "Banana Beach",
+    area: "Koh Phangan",
+    travelersNow: 4,
+    availableToChat: 2,
+    crowdLevel: "Moderate",
+    worthComing: { yes: 3, no: 1 },
+    vibe: "Chill sunset crowd",
+    lastUpdate: "3 minutes ago",
+    suggestedQuestions: [
+      "How crowded is it?",
+      "Is it worth coming now?",
+      "How's the water today?",
+    ],
+    questions: [
+      {
+        id: 1,
+        author: "Alex",
+        time: "2m ago",
+        text: "How crowded is it right now?",
+        replies: [
+          {
+            id: 11,
+            author: "Maya",
+            meta: "120m away",
+            text: "Pretty relaxed. Lots of space.",
+          },
+          {
+            id: 12,
+            author: "Tom",
+            meta: "arrived 10m ago",
+            text: "Getting busier near the bar.",
+          },
+        ],
+      },
+      {
+        id: 2,
+        author: "Luca",
+        time: "8m ago",
+        text: "Is the sunset good today?",
+        replies: [
+          {
+            id: 21,
+            author: "Nina",
+            meta: "80m away",
+            text: "Yes. Really good colors right now.",
+          },
+        ],
+      },
+    ],
+    recentTips: [
+      { id: 1, time: "12m ago", text: "Sunset incredible right now." },
+      { id: 2, time: "25m ago", text: "Water very warm today." },
+      { id: 3, time: "1h ago", text: "Parking almost full." },
+    ],
+  },
+  {
+    id: "sky-bar",
+    name: "Sky Bar",
+    area: "Bangkok",
+    travelersNow: 6,
+    availableToChat: 3,
+    crowdLevel: "Busy",
+    worthComing: { yes: 4, no: 2 },
+    vibe: "Loud, dressy, high-energy",
+    lastUpdate: "5 minutes ago",
+    suggestedQuestions: [
+      "Is there a line?",
+      "What's the vibe tonight?",
+      "Is it worth coming now?",
+    ],
+    questions: [
+      {
+        id: 3,
+        author: "James",
+        time: "5m ago",
+        text: "Is there a line to get in?",
+        replies: [
+          {
+            id: 31,
+            author: "Anna",
+            meta: "at entrance",
+            text: "About 20 minutes right now.",
+          },
+          {
+            id: 32,
+            author: "Leo",
+            meta: "inside now",
+            text: "Worth it though. View is amazing tonight.",
+          },
+        ],
+      },
+    ],
+    recentTips: [
+      { id: 4, time: "10m ago", text: "Music is good but it's crowded." },
+      { id: 5, time: "18m ago", text: "Dress code seems enforced tonight." },
+      { id: 6, time: "42m ago", text: "Tables almost fully booked." },
+    ],
+  },
+  {
+    id: "barceloneta",
+    name: "La Barceloneta Beach",
+    area: "Barcelona",
+    travelersNow: 3,
+    availableToChat: 1,
+    crowdLevel: "Moderate",
+    worthComing: { yes: 2, no: 1 },
+    vibe: "Sunny, easy, touristy",
+    lastUpdate: "7 minutes ago",
+    suggestedQuestions: [
+      "How crowded is it?",
+      "How's the water today?",
+      "Is it worth coming now?",
+    ],
+    questions: [
+      {
+        id: 4,
+        author: "Sophie",
+        time: "4m ago",
+        text: "How's the water today?",
+        replies: [
+          {
+            id: 41,
+            author: "Carlos",
+            meta: "just arrived",
+            text: "Warm enough. A bit windy though.",
+          },
+        ],
+      },
+    ],
+    recentTips: [
+      { id: 7, time: "9m ago", text: "Good swimming, a bit windy." },
+      { id: 8, time: "21m ago", text: "Crowd building slowly." },
+      { id: 9, time: "50m ago", text: "Lots of free sand space near the south end." },
+    ],
+  },
+  {
+    id: "carmel-market",
+    name: "Shuk HaCarmel",
+    area: "Tel Aviv",
+    travelersNow: 5,
+    availableToChat: 2,
+    crowdLevel: "Busy",
+    worthComing: { yes: 3, no: 2 },
+    vibe: "Loud, colorful, packed",
+    lastUpdate: "4 minutes ago",
+    suggestedQuestions: [
+      "How crowded is it?",
+      "Is it worth coming now?",
+      "Are most stalls open?",
+    ],
+    questions: [
+      {
+        id: 5,
+        author: "Dana",
+        time: "3m ago",
+        text: "Are most stalls open right now?",
+        replies: [
+          {
+            id: 51,
+            author: "Avi",
+            meta: "inside market",
+            text: "Yes, but some food places are packed.",
+          },
+        ],
+      },
+    ],
+    recentTips: [
+      { id: 10, time: "6m ago", text: "Very crowded near the main entrance." },
+      { id: 11, time: "19m ago", text: "Fresh juice stands are busy." },
+      { id: 12, time: "37m ago", text: "Best to enter from the side streets." },
+    ],
+  },
+];
+
+function SplashScreen() {
   return (
-    <div>
-      <h1>Instantip</h1>
+    <div style={styles.splash}>
+      <div style={styles.splashInner}>
+        <div style={styles.logo}>Instantip</div>
+        <div style={styles.tagline}>Ask someone who&apos;s already there</div>
+        <div style={styles.subTagline}>
+          Reviews tell you what a place is like.
+          <br />
+          Instantip tells you what it&apos;s like right now.
+        </div>
+      </div>
     </div>
-  )
+  );
 }
+
+function SearchScreen({ query, setQuery, onSelectPlace }) {
+  const filteredPlaces = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return places;
+    return places.filter((place) => {
+      const hay = `${place.name} ${place.area}`.toLowerCase();
+      return hay.includes(q);
+    });
+  }, [query]);
+
+  return (
+    <div style={styles.screen}>
+      <div style={styles.heroBlock}>
+        <div style={styles.kicker}>Ask someone who&apos;s already there</div>
+        <h1 style={styles.heroTitle}>Where are you going?</h1>
+        <div style={styles.searchWrap}>
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search place"
+            style={styles.searchInput}
+          />
+        </div>
+      </div>
+
+      <div style={styles.section}>
+        <div style={styles.sectionTitle}>Trending now</div>
+        <div style={styles.cardList}>
+          {filteredPlaces.map((place) => (
+            <button
+              key={place.id}
+              onClick={() => onSelectPlace(place)}
+              style={styles.placeCard}
+            >
+              <div style={styles.placeCardTop}>
+                <div>
+                  <div style={styles.placeName}>{place.name}</div>
+                  <div style={styles.placeArea}>{place.area}</div>
+                </div>
+                <div style={styles.liveBadge}>LIVE</div>
+              </div>
+
+              <div style={styles.placeStatsRow}>
+                <div style={styles.statBox}>
+                  <div style={styles.statLabel}>Travelers now</div>
+                  <div style={styles.statValue}>{place.travelersNow}</div>
+                </div>
+                <div style={styles.statBox}>
+                  <div style={styles.statLabel}>Crowd</div>
+                  <div style={styles.statValue}>{place.crowdLevel}</div>
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PlaceScreen({ place, onBack }) {
+  const [quickAnswer, setQuickAnswer] = useState(null);
+
+  return (
+    <div style={styles.screen}>
+      <div style={styles.topBar}>
+        <button onClick={onBack} style={styles.backButton}>
+          ← Back
+        </button>
+      </div>
+
+      <div style={styles.placeHeaderCard}>
+        <div style={styles.placeHeaderKicker}>Ask someone who&apos;s already there</div>
+        <h1 style={styles.placeHeaderTitle}>{place.name}</h1>
+        <div style={styles.placeHeaderArea}>{place.area}</div>
+
+        <div style={styles.presenceRow}>
+          <div style={styles.presenceDot} />
+          <div style={styles.presenceText}>
+            {place.travelersNow} travelers here now
+          </div>
+        </div>
+
+        <div style={styles.miniMeta}>
+          {place.availableToChat} available to chat · Active in the last 30 minutes
+        </div>
+
+        <div style={styles.summaryGrid}>
+          <div style={styles.summaryCard}>
+            <div style={styles.summaryLabel}>Crowd</div>
+            <div style={styles.summaryValue}>{place.crowdLevel}</div>
+          </div>
+          <div style={styles.summaryCard}>
+            <div style={styles.summaryLabel}>Worth coming now?</div>
+            <div style={styles.summaryValue}>
+              👍 {place.worthComing.yes} · 👎 {place.worthComing.no}
+            </div>
+          </div>
+          <div style={styles.summaryCardWide}>
+            <div style={styles.summaryLabel}>Vibe</div>
+            <div style={styles.summaryValue}>{place.vibe}</div>
+          </div>
+          <div style={styles.summaryCardWide}>
+            <div style={styles.summaryLabel}>Last update</div>
+            <div style={styles.summaryValue}>{place.lastUpdate}</div>
+          </div>
+        </div>
+
+        <button style={styles.primaryButton}>Chat with someone there</button>
+      </div>
+
+      <div style={styles.section}>
+        <div style={styles.sectionTitle}>Ask quickly</div>
+        <div style={styles.suggestedWrap}>
+          {place.suggestedQuestions.map((question) => (
+            <button key={question} style={styles.suggestedButton}>
+              {question}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div style={styles.section}>
+        <div style={styles.sectionTitle}>Quick answer</div>
+        <div style={styles.quickQuestionCard}>
+          <div style={styles.quickQuestionText}>How crowded is it?</div>
+          <div style={styles.quickOptions}>
+            {["Empty", "Moderate", "Busy"].map((option) => (
+              <button
+                key={option}
+                onClick={() => setQuickAnswer(option)}
+                style={{
+                  ...styles.quickOption,
+                  ...(quickAnswer === option ? styles.quickOptionActive : {}),
+                }}
+              >
+                {option}
+              </button>
+            ))}
+          </div>
+          {quickAnswer && (
+            <div style={styles.quickAnswerResult}>
+              Your answer: <strong>{quickAnswer}</strong>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div style={styles.section}>
+        <div style={styles.sectionTitle}>Live questions</div>
+        <div style={styles.cardList}>
+          {place.questions.map((question) => (
+            <div key={question.id} style={styles.questionCard}>
+              <div style={styles.questionMeta}>
+                {question.author} asked {question.time}
+              </div>
+              <div style={styles.questionText}>{question.text}</div>
+
+              <div style={styles.replyList}>
+                {question.replies.map((reply) => (
+                  <div key={reply.id} style={styles.replyCard}>
+                    <div style={styles.replyHeader}>
+                      <span style={styles.replyAuthor}>{reply.author}</span>
+                      <span style={styles.replyMeta}>{reply.meta}</span>
+                    </div>
+                    <div style={styles.replyText}>{reply.text}</div>
+                    <button style={styles.secondaryButton}>Chat privately</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div style={styles.section}>
+        <div style={styles.sectionTitle}>Recent tips</div>
+        <div style={styles.cardList}>
+          {place.recentTips.map((tip) => (
+            <div key={tip.id} style={styles.tipCard}>
+              <div style={styles.tipTime}>{tip.time}</div>
+              <div style={styles.tipText}>{tip.text}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function App() {
+  const [showSplash, setShowSplash] = useState(true);
+  const [query, setQuery] = useState("");
+  const [selectedPlace, setSelectedPlace] = useState(null);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowSplash(false);
+    }, 2200);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (showSplash) {
+    return <SplashScreen />;
+  }
+
+  if (selectedPlace) {
+    return <PlaceScreen place={selectedPlace} onBack={() => setSelectedPlace(null)} />;
+  }
+
+  return (
+    <SearchScreen
+      query={query}
+      setQuery={setQuery}
+      onSelectPlace={(place) => setSelectedPlace(place)}
+    />
+  );
+}
+
+const styles = {
+  splash: {
+    minHeight: "100vh",
+    background: "linear-gradient(180deg, #0f172a 0%, #1e293b 100%)",
+    color: "#ffffff",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "24px",
+  },
+  splashInner: {
+    maxWidth: "340px",
+    textAlign: "center",
+  },
+  logo: {
+    fontSize: "40px",
+    fontWeight: 800,
+    letterSpacing: "-0.03em",
+    marginBottom: "14px",
+  },
+  tagline: {
+    fontSize: "22px",
+    fontWeight: 700,
+    lineHeight: 1.2,
+    marginBottom: "16px",
+  },
+  subTagline: {
+    fontSize: "15px",
+    lineHeight: 1.5,
+    color: "rgba(255,255,255,0.82)",
+  },
+  screen: {
+    minHeight: "100vh",
+    background: "#f8fafc",
+    color: "#0f172a",
+    padding: "18px 16px 32px",
+    maxWidth: "480px",
+    margin: "0 auto",
+    boxSizing: "border-box",
+  },
+  heroBlock: {
+    paddingTop: "18px",
+    marginBottom: "20px",
+  },
+  kicker: {
+    fontSize: "13px",
+    fontWeight: 700,
+    color: "#2563eb",
+    marginBottom: "10px",
+    textTransform: "uppercase",
+    letterSpacing: "0.04em",
+  },
+  heroTitle: {
+    fontSize: "30px",
+    lineHeight: 1.1,
+    margin: 0,
+    marginBottom: "16px",
+  },
+  searchWrap: {
+    marginTop: "10px",
+  },
+  searchInput: {
+    width: "100%",
+    boxSizing: "border-box",
+    border: "1px solid #cbd5e1",
+    borderRadius: "14px",
+    padding: "16px 14px",
+    fontSize: "16px",
+    outline: "none",
+    background: "#ffffff",
+  },
+  section: {
+    marginTop: "22px",
+  },
+  sectionTitle: {
+    fontSize: "18px",
+    fontWeight: 800,
+    marginBottom: "12px",
+  },
+  cardList: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "12px",
+  },
+  placeCard: {
+    border: "none",
+    borderRadius: "18px",
+    background: "#ffffff",
+    padding: "16px",
+    textAlign: "left",
+    boxShadow: "0 6px 18px rgba(15, 23, 42, 0.06)",
+    cursor: "pointer",
+  },
+  placeCardTop: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: "12px",
+    marginBottom: "14px",
+  },
+  placeName: {
+    fontSize: "18px",
+    fontWeight: 800,
+    marginBottom: "4px",
+  },
+  placeArea: {
+    fontSize: "14px",
+    color: "#64748b",
+  },
+  liveBadge: {
+    fontSize: "12px",
+    fontWeight: 800,
+    color: "#16a34a",
+    background: "#dcfce7",
+    borderRadius: "999px",
+    padding: "7px 10px",
+    whiteSpace: "nowrap",
+  },
+  placeStatsRow: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: "10px",
+  },
+  statBox: {
+    background: "#f8fafc",
+    borderRadius: "14px",
+    padding: "12px",
+  },
+  statLabel: {
+    fontSize: "12px",
+    color: "#64748b",
+    marginBottom: "6px",
+  },
+  statValue: {
+    fontSize: "16px",
+    fontWeight: 800,
+  },
+  topBar: {
+    marginBottom: "8px",
+  },
+  backButton: {
+    border: "none",
+    background: "transparent",
+    color: "#2563eb",
+    fontSize: "16px",
+    fontWeight: 700,
+    padding: 0,
+    cursor: "pointer",
+  },
+  placeHeaderCard: {
+    background: "#ffffff",
+    borderRadius: "22px",
+    padding: "18px",
+    boxShadow: "0 6px 18px rgba(15, 23, 42, 0.06)",
+  },
+  placeHeaderKicker: {
+    fontSize: "12px",
+    fontWeight: 800,
+    color: "#2563eb",
+    textTransform: "uppercase",
+    letterSpacing: "0.04em",
+    marginBottom: "10px",
+  },
+  placeHeaderTitle: {
+    fontSize: "28px",
+    lineHeight: 1.1,
+    margin: 0,
+    marginBottom: "6px",
+  },
+  placeHeaderArea: {
+    color: "#64748b",
+    marginBottom: "16px",
+  },
+  presenceRow: {
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    marginBottom: "8px",
+  },
+  presenceDot: {
+    width: "12px",
+    height: "12px",
+    borderRadius: "50%",
+    background: "#22c55e",
+    flexShrink: 0,
+  },
+  presenceText: {
+    fontSize: "17px",
+    fontWeight: 800,
+  },
+  miniMeta: {
+    color: "#64748b",
+    fontSize: "13px",
+    marginBottom: "16px",
+  },
+  summaryGrid: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: "10px",
+    marginBottom: "16px",
+  },
+  summaryCard: {
+    background: "#f8fafc",
+    borderRadius: "16px",
+    padding: "12px",
+  },
+  summaryCardWide: {
+    background: "#f8fafc",
+    borderRadius: "16px",
+    padding: "12px",
+    gridColumn: "span 2",
+  },
+  summaryLabel: {
+    fontSize: "12px",
+    color: "#64748b",
+    marginBottom: "6px",
+  },
+  summaryValue: {
+    fontSize: "15px",
+    fontWeight: 800,
+    lineHeight: 1.35,
+  },
+  primaryButton: {
+    width: "100%",
+    border: "none",
+    borderRadius: "14px",
+    padding: "15px 16px",
+    fontSize: "16px",
+    fontWeight: 800,
+    background: "#2563eb",
+    color: "#ffffff",
+    cursor: "pointer",
+  },
+  suggestedWrap: {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: "10px",
+  },
+  suggestedButton: {
+    border: "1px solid #cbd5e1",
+    background: "#ffffff",
+    borderRadius: "999px",
+    padding: "11px 14px",
+    fontSize: "14px",
+    cursor: "pointer",
+  },
+  quickQuestionCard: {
+    background: "#ffffff",
+    borderRadius: "18px",
+    padding: "16px",
+    boxShadow: "0 6px 18px rgba(15, 23, 42, 0.06)",
+  },
+  quickQuestionText: {
+    fontWeight: 800,
+    fontSize: "16px",
+    marginBottom: "12px",
+  },
+  quickOptions: {
+    display: "flex",
+    gap: "8px",
+    flexWrap: "wrap",
+  },
+  quickOption: {
+    border: "1px solid #cbd5e1",
+    background: "#f8fafc",
+    borderRadius: "12px",
+    padding: "10px 14px",
+    fontSize: "14px",
+    cursor: "pointer",
+  },
+  quickOptionActive: {
+    background: "#dbeafe",
+    border: "1px solid #93c5fd",
+    fontWeight: 800,
+  },
+  quickAnswerResult: {
+    marginTop: "12px",
+    fontSize: "14px",
+    color: "#334155",
+  },
+  questionCard: {
+    background: "#ffffff",
+    borderRadius: "18px",
+    padding: "16px",
+    boxShadow: "0 6px 18px rgba(15, 23, 42, 0.06)",
+  },
+  questionMeta: {
+    fontSize: "13px",
+    color: "#64748b",
+    marginBottom: "8px",
+  },
+  questionText: {
+    fontSize: "18px",
+    fontWeight: 800,
+    lineHeight: 1.3,
+    marginBottom: "14px",
+  },
+  replyList: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "10px",
+  },
+  replyCard: {
+    background: "#f8fafc",
+    borderRadius: "14px",
+    padding: "12px",
+  },
+  replyHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    gap: "12px",
+    marginBottom: "8px",
+    flexWrap: "wrap",
+  },
+  replyAuthor: {
+    fontWeight: 800,
+  },
+  replyMeta: {
+    color: "#64748b",
+    fontSize: "13px",
+  },
+  replyText: {
+    marginBottom: "10px",
+    lineHeight: 1.45,
+  },
+  secondaryButton: {
+    border: "none",
+    background: "#e2e8f0",
+    borderRadius: "10px",
+    padding: "10px 12px",
+    fontSize: "13px",
+    fontWeight: 700,
+    cursor: "pointer",
+  },
+  tipCard: {
+    background: "#ffffff",
+    borderRadius: "16px",
+    padding: "14px",
+    boxShadow: "0 6px 18px rgba(15, 23, 42, 0.06)",
+  },
+  tipTime: {
+    fontSize: "12px",
+    color: "#64748b",
+    marginBottom: "6px",
+  },
+  tipText: {
+    fontSize: "15px",
+    lineHeight: 1.45,
+    fontWeight: 700,
+  },
+};
