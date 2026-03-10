@@ -53,9 +53,9 @@ const places = [
       },
     ],
     recentTips: [
-      { id: 1, time: "12m ago", text: "Sunset incredible right now." },
-      { id: 2, time: "25m ago", text: "Water very warm today." },
-      { id: 3, time: "1h ago", text: "Parking almost full." },
+      { id: 101, time: "12m ago", text: "Sunset incredible right now." },
+      { id: 102, time: "25m ago", text: "Water very warm today." },
+      { id: 103, time: "1h ago", text: "Parking almost full." },
     ],
   },
   {
@@ -96,9 +96,9 @@ const places = [
       },
     ],
     recentTips: [
-      { id: 4, time: "10m ago", text: "Music is good but it's crowded." },
-      { id: 5, time: "18m ago", text: "Dress code seems enforced tonight." },
-      { id: 6, time: "42m ago", text: "Tables almost fully booked." },
+      { id: 201, time: "10m ago", text: "Music is good but it's crowded." },
+      { id: 202, time: "18m ago", text: "Dress code seems enforced tonight." },
+      { id: 203, time: "42m ago", text: "Tables almost fully booked." },
     ],
   },
   {
@@ -133,9 +133,13 @@ const places = [
       },
     ],
     recentTips: [
-      { id: 7, time: "9m ago", text: "Good swimming, a bit windy." },
-      { id: 8, time: "21m ago", text: "Crowd building slowly." },
-      { id: 9, time: "50m ago", text: "Lots of free sand space near the south end." },
+      { id: 301, time: "9m ago", text: "Good swimming, a bit windy." },
+      { id: 302, time: "21m ago", text: "Crowd building slowly." },
+      {
+        id: 303,
+        time: "50m ago",
+        text: "Lots of free sand space near the south end.",
+      },
     ],
   },
   {
@@ -170,24 +174,70 @@ const places = [
       },
     ],
     recentTips: [
-      { id: 10, time: "6m ago", text: "Very crowded near the main entrance." },
-      { id: 11, time: "19m ago", text: "Fresh juice stands are busy." },
-      { id: 12, time: "37m ago", text: "Best to enter from the side streets." },
+      { id: 401, time: "6m ago", text: "Very crowded near the main entrance." },
+      { id: 402, time: "19m ago", text: "Fresh juice stands are busy." },
+      { id: 403, time: "37m ago", text: "Best to enter from the side streets." },
     ],
   },
 ];
 
-function SplashScreen() {
+function SplashScreen({ fadeOut }) {
   return (
-    <div style={styles.splash}>
+    <div
+      style={{
+        ...styles.splash,
+        opacity: fadeOut ? 0 : 1,
+        transform: fadeOut ? "scale(0.985)" : "scale(1)",
+        transition: "opacity 700ms ease, transform 700ms ease",
+      }}
+    >
       <div style={styles.splashInner}>
+        <div style={styles.splashIconWrap}>
+          <svg
+            width="120"
+            height="120"
+            viewBox="0 0 120 120"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            style={styles.splashIcon}
+          >
+            <rect
+              x="18"
+              y="42"
+              width="84"
+              height="52"
+              rx="18"
+              fill="rgba(255,255,255,0.08)"
+            />
+            <path
+              d="M30 84L46 76L60 82L74 74L90 80V42L74 36L60 44L46 38L30 46V84Z"
+              stroke="rgba(255,255,255,0.7)"
+              strokeWidth="3"
+              strokeLinejoin="round"
+            />
+            <path
+              d="M46 38V76"
+              stroke="rgba(255,255,255,0.45)"
+              strokeWidth="3"
+              strokeLinecap="round"
+            />
+            <path
+              d="M74 36V74"
+              stroke="rgba(255,255,255,0.45)"
+              strokeWidth="3"
+              strokeLinecap="round"
+            />
+            <circle cx="76" cy="34" r="16" fill="#38bdf8" />
+            <path
+              d="M69 34C69 30.6863 71.6863 28 75 28H77C80.3137 28 83 30.6863 83 34C83 37.3137 80.3137 40 77 40H74L69 44V34Z"
+              fill="white"
+            />
+            <circle cx="48" cy="58" r="5" fill="#22c55e" />
+          </svg>
+        </div>
+
         <div style={styles.logo}>Instantip</div>
         <div style={styles.tagline}>Ask someone who&apos;s already there</div>
-        <div style={styles.subTagline}>
-          Reviews tell you what a place is like.
-          <br />
-          Instantip tells you what it&apos;s like right now.
-        </div>
       </div>
     </div>
   );
@@ -385,23 +435,36 @@ function PlaceScreen({ place, onBack }) {
 
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
+  const [fadeSplash, setFadeSplash] = useState(false);
   const [query, setQuery] = useState("");
   const [selectedPlace, setSelectedPlace] = useState(null);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowSplash(false);
-    }, 2200);
+    const fadeTimer = setTimeout(() => {
+      setFadeSplash(true);
+    }, 2800);
 
-    return () => clearTimeout(timer);
+    const hideTimer = setTimeout(() => {
+      setShowSplash(false);
+    }, 3500);
+
+    return () => {
+      clearTimeout(fadeTimer);
+      clearTimeout(hideTimer);
+    };
   }, []);
 
   if (showSplash) {
-    return <SplashScreen />;
+    return <SplashScreen fadeOut={fadeSplash} />;
   }
 
   if (selectedPlace) {
-    return <PlaceScreen place={selectedPlace} onBack={() => setSelectedPlace(null)} />;
+    return (
+      <PlaceScreen
+        place={selectedPlace}
+        onBack={() => setSelectedPlace(null)}
+      />
+    );
   }
 
   return (
@@ -426,23 +489,28 @@ const styles = {
   splashInner: {
     maxWidth: "340px",
     textAlign: "center",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+  },
+  splashIconWrap: {
+    marginBottom: "18px",
+  },
+  splashIcon: {
+    display: "block",
+    filter: "drop-shadow(0 10px 30px rgba(56, 189, 248, 0.18))",
   },
   logo: {
     fontSize: "40px",
     fontWeight: 800,
     letterSpacing: "-0.03em",
-    marginBottom: "14px",
+    marginBottom: "12px",
   },
   tagline: {
     fontSize: "22px",
     fontWeight: 700,
     lineHeight: 1.2,
-    marginBottom: "16px",
-  },
-  subTagline: {
-    fontSize: "15px",
-    lineHeight: 1.5,
-    color: "rgba(255,255,255,0.82)",
+    maxWidth: "280px",
   },
   screen: {
     minHeight: "100vh",
