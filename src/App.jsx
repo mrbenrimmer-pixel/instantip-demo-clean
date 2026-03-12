@@ -1,30 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const PLACES = [
-  {
-    id: 1,
-    name: "Sky Bar",
-    lat: 60,
-    lon: 40,
-    crowd: 3,
-    line: "15 min"
-  },
-  {
-    id: 2,
-    name: "Banana Beach",
-    lat: 30,
-    lon: 70,
-    crowd: 2,
-    line: "No line"
-  },
-  {
-    id: 3,
-    name: "Burger Lab",
-    lat: 75,
-    lon: 65,
-    crowd: 1,
-    line: "5 min"
-  }
+  { id: 1, name: "Sky Bar", lat: 60, lon: 40, crowd: 3, line: "15 min" },
+  { id: 2, name: "Banana Beach", lat: 30, lon: 70, crowd: 2, line: "No line" },
+  { id: 3, name: "Burger Lab", lat: 75, lon: 65, crowd: 1, line: "5 min" }
 ];
 
 function crowdColor(level) {
@@ -37,6 +16,24 @@ function crowdColor(level) {
 export default function App() {
   const [screen, setScreen] = useState("question");
   const [selected, setSelected] = useState(null);
+
+  // Inject animation keyframes directly
+  useEffect(() => {
+    const style = document.createElement("style");
+    style.innerHTML = `
+      @keyframes pulse {
+        0% {
+          transform: scale(1);
+          opacity: 0.7;
+        }
+        100% {
+          transform: scale(3);
+          opacity: 0;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }, []);
 
   if (screen === "question") {
     return (
@@ -83,7 +80,9 @@ export default function App() {
           <p>Crowd: {["Quiet", "Active", "Busy", "Packed"][selected.crowd]}</p>
           <p>Line: {selected.line}</p>
           <p style={{ opacity: 0.6 }}>Updated just now</p>
-          <button onClick={() => setSelected(null)}>Close</button>
+          <button style={styles.close} onClick={() => setSelected(null)}>
+            Close
+          </button>
         </div>
       )}
     </div>
@@ -97,22 +96,27 @@ const styles = {
     flexDirection: "column",
     justifyContent: "center",
     alignItems: "center",
-    fontFamily: "sans-serif"
+    fontFamily: "sans-serif",
+    background: "#0f172a",
+    color: "white"
   },
 
   title: {
-    fontSize: "40px",
+    fontSize: "42px",
     marginBottom: "10px"
   },
 
   subtitle: {
     fontSize: "20px",
-    marginBottom: "30px"
+    marginBottom: "30px",
+    opacity: 0.8
   },
 
   button: {
-    padding: "12px 22px",
+    padding: "12px 24px",
     fontSize: "16px",
+    borderRadius: "8px",
+    border: "none",
     cursor: "pointer"
   },
 
@@ -148,13 +152,20 @@ const styles = {
 
   card: {
     position: "absolute",
-    bottom: "20px",
+    bottom: "25px",
     left: "50%",
     transform: "translateX(-50%)",
     background: "white",
-    padding: "20px",
+    padding: "18px",
     borderRadius: "10px",
     width: "220px",
-    fontFamily: "sans-serif"
+    fontFamily: "sans-serif",
+    boxShadow: "0 10px 25px rgba(0,0,0,0.3)"
+  },
+
+  close: {
+    marginTop: "10px",
+    padding: "6px 10px",
+    cursor: "pointer"
   }
 };
